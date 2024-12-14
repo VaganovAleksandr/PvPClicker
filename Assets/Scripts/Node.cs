@@ -2,10 +2,16 @@ using UnityEngine;
 
 
 // States of node in graph: free if no player controls it, occupied otherwise
-public enum NodeState {Free, Occupied}
+public enum NodeState {
+    Free, 
+    Occupied
+}
 
 // Type of node in graph: pointers to resource that the node produces
-public enum NodeType {Gold, Mana}
+public enum NodeType {
+    Gold, 
+    Mana
+}
 
 // Node class for graph
 public class Node {

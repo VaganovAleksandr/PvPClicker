@@ -17,19 +17,19 @@ public class Graph {
     }
 
     // Private function for generating edges in graph. Uses Delone triangulation
-    private void MakeEdges() {
-        // skip
+    private void MakeEdges(Vector2 bounds) {
+        
     }
 
     // Function to generate graph
     void Generate(Vector2 bounds, int num_nodes=0, float gold_freq=0.1f) {
         /*
-            bounds: Bounds of coordinates to generate points, 
+            bounds: Bounds of coordinates to generate points, must be two integers
             num_nodes: Number of nodes in generated graph
             gold_freq: Frequency of gold nodes in graph. Must be float value in [0, 1]
         */
         GenerateNodes(num_nodes);
-        MakeEdges();
+        MakeEdges(bounds);
     }
 
     int Size() {
