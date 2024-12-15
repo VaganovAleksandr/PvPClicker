@@ -1,4 +1,4 @@
-using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -9,7 +9,7 @@ public class DrawMainMenu : MonoBehaviour
         Debug.Log("Starting game...");
         SceneManager.LoadScene("Intro");
     }
-
+    
     public void EnterSettings()
     {
         //TODO: settings menu

@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      night sky_0: -7615602405591251712
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
