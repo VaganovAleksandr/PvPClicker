@@ -3,7 +3,7 @@ using UnityEngine;
 public class EdgeUI
 {
     // Function of drawing edges
-    public void DrawEdge(GameCore.Edge edge)
+    public static void DrawEdge(GameCore.Edge edge)
     {
         // Creating edge
         var newEdge = new GameObject("edge");

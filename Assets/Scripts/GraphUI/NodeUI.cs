@@ -10,6 +10,10 @@ public class NodeUI : MonoBehaviour
         GameObject newNode = (node.GetNodeType() == node.GetDefaultType())
             ? Instantiate(defaultPrefab)
             : Instantiate(minerPrefab);
+        newNode.transform.localScale *= GameCore.CellSize;
         newNode.transform.position = new Vector2(node.GetCoordinate().x, node.GetCoordinate().y);
+        newNode.GetComponent<SpriteRenderer>().color = GameCore.MyColors[node.GetColor()];
     }
+
+    
 }

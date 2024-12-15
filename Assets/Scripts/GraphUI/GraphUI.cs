@@ -1,17 +1,11 @@
-public class GraphUI
-{
-    public void DrawGraph(GameCore.Node[] nodes, GameCore.Edge[] edges)
-    {
-        var nodeDrawer = new NodeUI();
-        var edgeDrawer = new EdgeUI();
-        foreach (var node in nodes)
-        {
-            nodeDrawer.DrawNode(node);
-        }
+using UnityEngine;
 
-        foreach (var edge in edges)
-        {
-            edgeDrawer.DrawEdge(edge);
-        }
+public class GraphUI : MonoBehaviour
+{
+    [SerializeField] public NodeUI node_drawer;
+    public void DrawGraph(GameCore.Graph graph)
+    {
+        foreach (var node in graph.nodes) node_drawer.DrawNode(node);
+        foreach (var edge in graph.edges) EdgeUI.DrawEdge(edge);
     }
 }
