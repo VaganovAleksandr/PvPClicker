@@ -4,7 +4,7 @@ public class GameCore : MonoBehaviour
 {
     public class Node
     {
-        private enum Type
+        public enum NodeType
         {
             Default,
             Miner
@@ -13,7 +13,7 @@ public class GameCore : MonoBehaviour
         private Vector2 _coordinate;
         private Color _color; // TODO: change with texture
         private int _value;
-        private Type _nodeType;
+        private NodeType _nodeType;
 
         public void SetCoordinate(Vector2 new_coordinate) => _coordinate = new_coordinate;
         
@@ -26,6 +26,12 @@ public class GameCore : MonoBehaviour
         public Color GetColor() => _color;
         
         public int GetValue() => _value;
+        
+        public NodeType GetNodeType() => _nodeType;
+        
+        public NodeType GetDefaultType() => NodeType.Default;
+        
+        public NodeType GetMinerType() => NodeType.Miner;
 
         public void Update()
         {
