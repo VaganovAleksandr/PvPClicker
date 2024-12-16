@@ -10,15 +10,15 @@ public class Graph {
     public List<Edge> edges;
     
     // Private function for generating nodes in this.nodes
-    private void GenerateNodes(int num_nodes) {
+    private void GenerateNodes(int num_nodes, Vector2 bounds) {
         for (int i = 0; i < num_nodes; ++i) {
             nodes.Add(new Node());
         }
     }
 
     // Private function for generating edges in graph. Uses Delone triangulation
-    private void MakeEdges(Vector2 bounds) {
-        
+    private void MakeEdges() {
+        ;
     }
 
     // Function to generate graph
@@ -28,8 +28,8 @@ public class Graph {
             num_nodes: Number of nodes in generated graph
             gold_freq: Frequency of gold nodes in graph. Must be float value in [0, 1]
         */
-        GenerateNodes(num_nodes);
-        MakeEdges(bounds);
+        GenerateNodes(num_nodes, bounds);
+        MakeEdges();
     }
 
     int Size() {
