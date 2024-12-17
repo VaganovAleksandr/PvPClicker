@@ -5,11 +5,10 @@ using UnityEngine.SceneManagement;
 public class DrawIntro : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    Animator animator;
+    Animator _animator;
     void Start()
     {
-        animator = GetComponent<Animator>();
-        animator.Play("IntroTextAnimation");
+        _animator = GetComponent<Animator>();
         StartCoroutine(WaitTillEndOfScene());
     }
 
@@ -21,10 +20,10 @@ public class DrawIntro : MonoBehaviour
     
     void Update()
     {
-        var stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+        var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
         if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return))
         {
-            animator.enabled = false;
+            _animator.enabled = false;
             SceneManager.LoadScene("Game");
         }
     }
