@@ -1,1 +1,2 @@
-.DS_Store
+Unity_folder/*
+!Unity_folder/Assets/
