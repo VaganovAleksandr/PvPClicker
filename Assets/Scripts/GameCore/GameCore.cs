@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using System;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using UnityEngine.EventSystems;
 
 public class GameCore : MonoBehaviour
 {
@@ -26,6 +29,10 @@ public class GameCore : MonoBehaviour
         private int _value;
         private int _grade;
         private NodeType _nodeType;
+
+        public List<int> edges;
+
+        public GameObject unity_object;
 
         public void SetCoordinate(Vector2 new_coordinate) => _coordinate = new_coordinate;
         
@@ -59,6 +66,7 @@ public class GameCore : MonoBehaviour
             _value = val;
             _grade = grade;
             _nodeType = nt;
+            edges = new ();
         }
     }
 
@@ -71,10 +79,21 @@ public class GameCore : MonoBehaviour
     public struct Graph
     {
         public List<Node> nodes;
-        public List<Edge> edges;
+        public List<Edge> edges;  // ?
         public Graph(int lol = 0) {
             nodes = new ();
             edges = new ();
+        }
+        public void AddEdge(int a, int b) {
+            Node node_a = nodes[a];
+            Node node_b = nodes[b];
+
+            // var new_edge = new Edge(); edges.Add();
+            node_a.edges.Add(b);
+            node_b.edges.Add(a);
+
+            nodes[a] = node_a;
+            nodes[b] = node_b;
         }
     }
 
@@ -83,73 +102,26 @@ public class GameCore : MonoBehaviour
         public Graph graph;
         public List<int> scores;
         public List<int> click_powers;
-        public bool is_game_running;
+        public List<bool> running_state;
         public void InitGameState(int players_cnt) {
             graph = new (0);
             scores = new ();
             click_powers = new ();
+            running_state = new();
             for (int i = 0; i < players_cnt; ++i)
             {
-                scores.Add(0); click_powers.Add(0);
+                scores.Add(0);
+                click_powers.Add(1);
+                running_state.Add(true);
             }
         }
     }
 
     // actual data
-    private GameState state = new ();
-    public int PlayerColor = 1;
-    public ObjectsHolder ObjectHolder;
+    public GameState state = new ();
+    public int PlayerColor = 0;
+    public ObjectsHolder Holder;
     // actual data
-    public static float CellSize = 100f;
-
-    private Node CheckCollision()
-    {
-        var mouseWorldPos = Input.mousePosition;
-
-        foreach (var node in state.graph.nodes)
-        {
-            if (Vector2.Distance(mouseWorldPos, node.GetCoordinate()) < CellSize)
-            {
-                return node;
-            }
-        }
-        
-        return null;
-    }
-
-    void OnGUI()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            // LMB
-            
-            var clickedNode = CheckCollision();
-            if (clickedNode == null)
-            {
-                return;
-            }
-
-            LeftClickOnNode(clickedNode);
-        }
-        else if (Input.GetMouseButtonDown(1))
-        {
-            // RMB
-            
-            var clickedNode = CheckCollision();
-            if (clickedNode == null)
-            {
-                return;
-            }
-
-            RightClickOnNode(clickedNode);
-        }
-    }
-    
-
-
-
-
-
 
 
 
@@ -163,16 +135,30 @@ public class GameCore : MonoBehaviour
 
 
     // go away? ))))))
-    private void LeftClickOnNode(Node node)
+    private bool CheckAvalibility(int node_num) {
+        Node node = state.graph.nodes[node_num];
+        foreach (var i in node.edges) {
+            if (state.graph.nodes[i].GetColor() == PlayerColor) {
+                return true;
+            }
+        }
+        Debug.Log("This node is not near");
+        return false;
+    }
+    public void LeftClickOnNode(int node_num)
     {
+        Node node = state.graph.nodes[node_num];
+
         int power = state.click_powers[PlayerColor];
         if (PlayerColor == 0) {
             // player 0 does unique things
-            if (node.GetValue() < power) node.SetColor(0);
             if (node.GetColor() == 0) { node.ChangeValue(power); }
-            else { node.ChangeValue(-power); }
-        } else if (node.GetColor() == PlayerColor) { node.ChangeValue(power); }
             else {
+                if (node.GetValue() < power) node.SetColor(0);
+                node.ChangeValue(power - 2 * node.GetValue());
+            }
+        } else if (node.GetColor() == PlayerColor) { node.ChangeValue(power); }
+            else if (CheckAvalibility(node_num)) {
             int capture_constant = 100;
             bool capture_condition = node.GetColor() == 0;
             if (node.GetColor() != 0) {
@@ -185,45 +171,91 @@ public class GameCore : MonoBehaviour
                 } else { node.ChangeValue(-power); }
             }
         }
-        UpdateNode(node);
-        UpdateScore();
+        Holder.GameDrawerObject.UpdateNode(node);
+        Holder.GameDrawerObject.UpdateScore();
+
+        state.graph.nodes[node_num] = node;
     }
-    private void RightClickOnNode(Node node)
+    public void RightClickOnNode(int node_num)
     {
+        Node node = state.graph.nodes[node_num];
+
         if (node.GetColor() != PlayerColor) { return; }
         if (TryToPay(2 << node.GetGrade())) node.SetGrade(node.GetGrade() + 1);
-        UpdateNode(node);
+        Holder.GameDrawerObject.UpdateNode(node);
+
+        state.graph.nodes[node_num] = node;
     }
     public void Start()
     {
+        // Holder.OnClick += OnPointerDown;
         state.InitGameState(NumberOfColours);
-        state.is_game_running = true;
 
         // tmp_filling
-        for (int i = 0; i < 4; ++i) state.graph.nodes.Add(new Node());
-        state.graph.nodes[0].SetNodeState(new Vector2(200, 800), 0, 0, 0, Node.NodeType.Miner);
-        state.graph.nodes[1].SetNodeState(new Vector2(400, 800), 0, 0, 0, Node.NodeType.Miner);
-        state.graph.nodes[2].SetNodeState(new Vector2(600, 800), 0, 0, 0, Node.NodeType.Miner);
-        state.graph.nodes[3].SetNodeState(new Vector2(800, 800), 0, 0, 0, Node.NodeType.Miner);
+        for (int i = 0; i < 10; ++i) state.graph.nodes.Add(new Node());
+        state.graph.nodes[0].SetNodeState(new Vector2(200, 750), 0, 0, 0, Node.NodeType.Miner);
+        state.graph.nodes[1].SetNodeState(new Vector2(511, 742), 0, 1, 0, Node.NodeType.Miner);
+        state.graph.nodes[2].SetNodeState(new Vector2(1720, 120), 0, 2, 0, Node.NodeType.Miner);
+        state.graph.nodes[3].SetNodeState(new Vector2(1430, 910), 0, 3, 0, Node.NodeType.Miner);
+        state.graph.nodes[4].SetNodeState(new Vector2(1042, 671), 0, 4, 0, Node.NodeType.Miner);
 
-       ObjectHolder.GraphUIObject.DrawGraph(state.graph);
+        state.graph.nodes[5].SetNodeState(new Vector2(700, 940), 1, 5, 0, Node.NodeType.Miner);
+        state.graph.nodes[6].SetNodeState(new Vector2(980, 200), 2, 6, 0, Node.NodeType.Miner);
+        state.graph.nodes[7].SetNodeState(new Vector2(1700, 510), 3, 7, 0, Node.NodeType.Miner);
+
+        state.graph.nodes[8].SetNodeState(new Vector2(432, 110), 0, 8, 0, Node.NodeType.Miner);
+        state.graph.nodes[9].SetNodeState(new Vector2(524, 571), 0, 9, 0, Node.NodeType.Miner);
+
+
+
+        state.graph.AddEdge(1, 5);
+        state.graph.AddEdge(0, 1);
+        state.graph.AddEdge(1, 9);
+        state.graph.AddEdge(8, 9);
+        state.graph.AddEdge(6, 9);
+        state.graph.AddEdge(2, 4);
+        state.graph.AddEdge(4, 6);
+        state.graph.AddEdge(3, 4);
+        state.graph.AddEdge(2, 7);
+        // tmp_filling
+
+       Holder.GameDrawerObject.DrawGame();
+       ChangePlayerColor();
+    }
+    void CheckGameEnd() {
+        foreach (var node in state.graph.nodes) {
+            if (node.GetColor() == PlayerColor) {
+                state.running_state[PlayerColor] = true;
+                Holder.GameDrawerObject.UpdateEndGame();  // ?
+                return;
+            }
+        }
+        state.running_state[PlayerColor] = false;
+
+        Holder.GameDrawerObject.UpdateEndGame();
     }
     void CountGold()
     {
         foreach(Node node in state.graph.nodes)
-        state.scores[node.GetColor()] += node.GetColor() * (node.GetGrade() + 1);
+        state.scores[node.GetColor()] += node.GetValue() * (node.GetGrade() + 1);
 
-        UpdateScore();
+        Holder.GameDrawerObject.UpdateScore();
     }
     private float GoldTimer = 0;
+    private float CheckEndGameTimer = 0;
     public void Update()
     {
         // if (Input.GetKeyDown(KeyCode.Tab)) { Application.Quit(); }
-        if (!state.is_game_running) { return; }
+        // if (!state.is_game_running) { return; }
         GoldTimer += Time.deltaTime;
+        CheckEndGameTimer += Time.deltaTime;
         if (GoldTimer >= 1) {
             GoldTimer -= 1;
             CountGold();
+        }
+        if (CheckEndGameTimer >= 1) {
+            CheckEndGameTimer -= 1;
+            CheckGameEnd();
         }
     }
     bool TryToPay(int cost)
@@ -238,13 +270,18 @@ public class GameCore : MonoBehaviour
     void ChangeCurrentScore(int delta)
     {
         state.scores[PlayerColor] += delta;
-        UpdateScore();
+        Holder.GameDrawerObject.UpdateScore();
+    }
+    public void ChangePlayerColor() {
+        PlayerColor += 1; PlayerColor %= NumberOfColours;
+        CheckGameEnd();
+        Holder.GameDrawerObject.UpdateAllStats();
+    }
+    public void IncreasePowerClick() {
+        if (TryToPay(1 << state.click_powers[PlayerColor])) {
+            ++state.click_powers[PlayerColor];
+            Holder.GameDrawerObject.UpdatePowerClick();
+        }
     }
 
-
-
-    // updating screen section
-    void UpdateScore() {}
-    void UpdateNode(Node node) {}
-    
 }
