@@ -1,318 +1,287 @@
-using UnityEngine;
-using System.Numerics;
 using System.Collections.Generic;
+using System;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System;
-using Unity.VisualScripting;
+using UnityEngine.EventSystems;
 
 public class GameCore : MonoBehaviour
 {
-    // buttons
-    public static GameObject NodeObjectSpawner;
-    public static GameObject ButtonToChangeColor;
-    public static GameObject ScoreTable;
-    public static GameObject ButtonIncreasePower;
-    public static GameObject ButtonChangeClickMode;
-    public GameObject NodeObjectSpawner_tmp;
-    public GameObject ButtonToChangeColor_tmp;
-    public GameObject ScoreTable_tmp;
-    public GameObject ButtonIncreasePower_tmp;
-    public GameObject ButtonChangeClickMode_tmp;
-    // buttons
     public static Color[] MyColors = {
-        new Color(0.5f, 0.5f, 0.5f),  // Grey
+        new Color(0.5f, 0.5f, 0.5f),  // Grey ~ FreeNode
         new Color(0.0f, 0.0f, 1.0f),  // Blue
         new Color(   1,    0,    0),  // Red
         new Color(   0,    1,    0),  // Green
         new Color(   0,    0,    0),  // Debug
     };
-    public static int NumberOfColours = MyColors.Length;
-    public int CurrentPlayerColor = 0;
-    public static string[] ClickModes = {"UsualClick", "PowerUpNode"};
-    public static int NumberOfClickModes = ClickModes.Length;
-    public int CurrentClickMode = 0;
-    public class MyColorClass {
-        Color c;
-        public static void ChangeIntencity(ref Color color, float mult) {
-            color.r *= mult;
-            color.g *= mult;
-            color.b *= mult;
+    public static int NumberOfColours = MyColors.Length;  // public fields are evil?
+    public class Node
+    {
+        public enum NodeType
+        {
+            Default,
+            Miner
         }
-        public void ChangeIntencity(float mult) {
-            c.r *= mult;
-            c.g *= mult;
-            c.b *= mult;
-        }
-    }
-    public static void ChangeColorOfAButton(ref Button obj, int num) {
-        // here's a mess
-        Color tmp = MyColors[num];
-        Color new_color1 = new Color(tmp.r, tmp.g, tmp.b, tmp.a);
-        Color new_color2 = new Color(tmp.r, tmp.g, tmp.b, tmp.a);
-        MyColorClass.ChangeIntencity(ref new_color2, 0.8f);
-        Color new_color3 = new Color(tmp.r, tmp.g, tmp.b, tmp.a);
-        MyColorClass.ChangeIntencity(ref new_color3, 0.8f);
-
-        var changed_color = obj.colors;
-
-        changed_color.normalColor = new_color1;
-        changed_color.selectedColor = new_color1;
         
-        changed_color.highlightedColor = new_color1 * 1.0f;  // it's changing alpha I guess
+        private Vector2 _coordinate;
+        // private Color _color; // TODO: change with texture
+        private int _color;  // refers to MyColors
+        private int _value;
+        private int _grade;
+        private NodeType _nodeType;
 
-        changed_color.pressedColor = new_color1 * 0.8f;
-        changed_color.disabledColor = new_color1 * 0.8f;
-
-        obj.colors = changed_color;
-    }
-    public void ChangePlayerColor() {
-        CurrentPlayerColor = (CurrentPlayerColor + 1) % MyColors.Length;
-        var button = ButtonToChangeColor.GetComponentInChildren<Button>();
-        ChangeColorOfAButton(ref button, CurrentPlayerColor);
-        UpdateScore();
-        UpdateClickPower();
-    }
-    public struct NodeObjectRefs {
-        public GameObject node;
-        public Canvas canvas;
-        public Button button;
-        public TextMeshProUGUI text;
-        public void GenRefs(GameObject node_i) {
-            node = node_i;
-            canvas = node.GetComponentInChildren<Canvas>();
-            button = canvas.GetComponentInChildren<Button>();
-            text = button.GetComponentInChildren<TextMeshProUGUI>();
-        }
-        public void ForgetRefs() {
-            if (node != null) {
-                Destroy(node);
-                node = null;
-                canvas = null;
-                button = null;
-                text = null;
-            }
-        }
-    }
-    public struct Node {
-        public int number;
-        public int x;
-        public int y;
-        public int color;
-        public int score;
-        public int grade;
         public List<int> edges;
-        public NodeObjectRefs refs;
-        // public GameObject ref_to_node;
-        public Node(int n_i, int x_i, int y_i, int c_i, int s_i, List<int> e_i) {
-            number = n_i;
-            x = x_i;
-            y = y_i;
-            color = c_i;
-            score = s_i;
-            edges = e_i;
-            refs = new NodeObjectRefs();
 
-            grade = 0;
-        }
-        public void ChangeColor(int num) {
-            color = num;
-            ChangeColorOfAButton(ref refs.button, num);
-        }
-        public void ChangeScore(int delta) {
-            score += delta;
-            refs.text.text = score.ToString();
-        }
-        public void ChangeGrade(int delta) {
-            grade += delta;
-            // update visuals?
-        }
-        public void DrawNode() {
-            GameObject newobj = Instantiate(NodeObjectSpawner);
-            newobj.name = number.ToString();
-            refs.GenRefs(newobj);
-            
-            ChangeColor(color);
-            ChangeScore(0);
+        public GameObject unity_object;
 
-            UnityEngine.Vector3 vec = new UnityEngine.Vector3(x, y, 0);
-            refs.button.GetComponent<RectTransform>().anchoredPosition = vec;
+        public void SetCoordinate(Vector2 new_coordinate) => _coordinate = new_coordinate;
+        
+        public void SetColor(int new_color) => _color = new_color;
+
+        public void SetValue(int new_value) => _value = new_value;
+
+        public void ChangeValue(int delta) => _value += delta;
+
+        public void SetGrade(int new_grade) => _grade = new_grade;
+
+        public Vector2 GetCoordinate() => _coordinate;
+        
+        public int GetColor() => _color;
+        
+        public int GetValue() => _value;
+
+        public int GetGrade() => _grade;
+        
+        public NodeType GetNodeType() => _nodeType;
+        
+        public NodeType GetDefaultType() => NodeType.Default;
+        
+        public NodeType GetMinerType() => NodeType.Miner;
+
+        // tmp_cringe
+        public void SetNodeState(Vector2 coord, int color, int val, int grade, NodeType nt)
+        {
+            _coordinate = coord;
+            _color = color;
+            _value = val;
+            _grade = grade;
+            _nodeType = nt;
+            edges = new ();
         }
     }
-    public struct GameState {
+
+    public struct Edge
+    {
+        public Node FirstNode;
+        public Node SecondNode;
+    }
+
+    public struct Graph
+    {
         public List<Node> nodes;
+        public List<Edge> edges;  // ?
+        public Graph(int lol = 0) {
+            nodes = new ();
+            edges = new ();
+        }
+        public void AddEdge(int a, int b) {
+            Node node_a = nodes[a];
+            Node node_b = nodes[b];
+
+            // var new_edge = new Edge(); edges.Add();
+            node_a.edges.Add(b);
+            node_b.edges.Add(a);
+
+            nodes[a] = node_a;
+            nodes[b] = node_b;
+        }
+    }
+
+    public struct GameState
+    {
+        public Graph graph;
         public List<int> scores;
         public List<int> click_powers;
-        public bool is_game_running;
-        public GameState(int aboba) {
-            nodes = new List<Node>();
-
-            scores = new List<int>();
-            click_powers = new List<int>();
-            is_game_running = true;
-            for (int i = 0; i < NumberOfColours; ++i) {
+        public List<bool> running_state;
+        public void InitGameState(int players_cnt) {
+            graph = new (0);
+            scores = new ();
+            click_powers = new ();
+            running_state = new();
+            for (int i = 0; i < players_cnt; ++i)
+            {
                 scores.Add(0);
                 click_powers.Add(1);
-            }
-        }
-        public void RemoveDesk() {
-            for (int i = 0; i < nodes.Count; ++i) {
-                Node node = nodes[i];
-                node.refs.ForgetRefs();
-                nodes[i] = node;
-            }
-
-            for (int i = 0; i < NumberOfColours; ++i) { scores[i] = 0; }
-            for (int i = 0; i < NumberOfColours; ++i) { click_powers[i] = 1; }
-        }
-        public void SetAnotherGameState(GameState another) {
-            RemoveDesk();
-            this = another;
-            // DrawDesk();  // ?
-        }
-        public void DrawDesk() {
-            RemoveDesk();
-            for (int i = 0; i < nodes.Count; ++i) {
-                Node node = nodes[i];
-                node.DrawNode();
-                nodes[i] = node;
+                running_state.Add(true);
             }
         }
     }
-    public class GameGenerator {
-        public static GameState GenSimpleGamestate() {
-            GameState ans = new GameState(0);
-            //                     n     x     y  c  s
-            ans.nodes.Add(new Node(0, 0100, 0100, 0, 2, new List<int>()));
-            ans.nodes.Add(new Node(1, 0500, -100, 1, 1, new List<int>()));
-            ans.nodes.Add(new Node(2, -200, 0000, 0, 5, new List<int>()));
-            ans.nodes.Add(new Node(3, -200, -470, 0, 8, new List<int>()));
-            ans.nodes.Add(new Node(4, -610, 0230, 0, 0, new List<int>()));
-            ans.nodes.Add(new Node(5, -740, -280, 0, 3, new List<int>()));
-            ans.nodes.Add(new Node(6, 0050, -210, 3, 4, new List<int>()));
-            ans.nodes.Add(new Node(7, 0650, 0280, 2, 9, new List<int>()));
-            return ans;
-        }
-        public static GameState GenRandomGamestate() {
-            GameState ans = new GameState(0);
-            // ??
-            return ans;
-        }
-        public static GameState GenDefaultGamestate() {
-            return GenSimpleGamestate();
-            // return GenRandomGameState();
-        }
-    }
 
-    //  block with actual game info
-    public GameState state = GameGenerator.GenDefaultGamestate();
-    //
+    // actual data
+    public GameState state = new ();
+    public int PlayerColor = 0;
+    public ObjectsHolder Holder;
+    // actual data
 
-    public void PressNode(GameObject NodeObject) {
-        int num = int.Parse(NodeObject.name);
-        Node node = state.nodes[num];
-        int power = state.click_powers[CurrentPlayerColor];
 
-        if (CurrentClickMode == 0) {
-            if (CurrentPlayerColor == 0) {
-                // player 0 does unique things
-                if (node.score < power) node.ChangeColor(0);
-                if (node.color == 0) { node.ChangeScore(power); }
-                else { node.ChangeScore(-power); }
-            } else if (node.color == CurrentPlayerColor) {
-                node.ChangeScore(power);
-            } else {
-                int capture_constant = 100;
-                bool capture_condition = node.color == 0;
-                if (node.color != 0) {
-                    capture_condition = TryToPay(capture_constant * Math.Min(power, node.score));
-                }
-                if (capture_condition) {
-                    if (node.score < power) {
-                        node.ChangeColor(CurrentPlayerColor);
-                        node.ChangeScore(power - 2 * node.score);
-                    } else {
-                        node.ChangeScore(-power);
-                    }
-                }
-            }
-        } else if (CurrentClickMode == 1) {
-            if (node.color == CurrentPlayerColor) {
-                if (TryToPay(2 << node.grade)) node.ChangeGrade(1);
+
+
+
+
+
+
+
+
+
+
+    // go away? ))))))
+    private bool CheckAvalibility(int node_num) {
+        Node node = state.graph.nodes[node_num];
+        foreach (var i in node.edges) {
+            if (state.graph.nodes[i].GetColor() == PlayerColor) {
+                return true;
             }
         }
-
-        state.nodes[num] = node;
+        Debug.Log("This node is not near");
+        return false;
     }
-    public void IncreaseClickPower() {
-        int cost = 100;  // a constant??
-        if (state.scores[CurrentPlayerColor] >= cost) {
-            state.scores[CurrentPlayerColor] -= cost;
-            state.click_powers[CurrentPlayerColor] += 1;
+    public void LeftClickOnNode(int node_num)
+    {
+        Node node = state.graph.nodes[node_num];
+
+        int power = state.click_powers[PlayerColor];
+        if (PlayerColor == 0) {
+            // player 0 does unique things
+            if (node.GetColor() == 0) { node.ChangeValue(power); }
+            else {
+                if (node.GetValue() < power) node.SetColor(0);
+                node.ChangeValue(power - 2 * node.GetValue());
+            }
+        } else if (node.GetColor() == PlayerColor) { node.ChangeValue(power); }
+            else if (CheckAvalibility(node_num)) {
+            int capture_constant = 100;
+            bool capture_condition = node.GetColor() == 0;
+            if (node.GetColor() != 0) {
+                capture_condition = TryToPay(capture_constant * Math.Min(power, node.GetValue()));
+            }
+            if (capture_condition) {
+                if (node.GetValue() < power) {
+                    node.SetColor(PlayerColor);
+                    node.ChangeValue(power - 2 * node.GetValue());
+                } else { node.ChangeValue(-power); }
+            }
         }
-        UpdateClickPower();
-        UpdateScore();
-    }
-    public void ChangeClickMode() {
-        CurrentClickMode = (CurrentClickMode + 1) % NumberOfClickModes;
-        ButtonChangeClickMode.GetComponentInChildren<TextMeshProUGUI>().text =
-        ClickModes[CurrentClickMode];
-        Debug.Log(CurrentClickMode);
-    }
+        Holder.GameDrawerObject.UpdateNode(node);
+        Holder.GameDrawerObject.UpdateScore();
 
-    public void Start() {
-        NodeObjectSpawner = NodeObjectSpawner_tmp;  // lol wtf...
-        ButtonToChangeColor = ButtonToChangeColor_tmp;
-        ScoreTable = ScoreTable_tmp;
-        ButtonIncreasePower = ButtonIncreasePower_tmp;
-        ButtonChangeClickMode = ButtonChangeClickMode_tmp;
-        ChangePlayerColor();
-        ChangeClickMode(); ChangeClickMode();
+        state.graph.nodes[node_num] = node;
     }
+    public void RightClickOnNode(int node_num)
+    {
+        Node node = state.graph.nodes[node_num];
 
-    public float GoldTimer = 0;
-    void ChangeCurrentScore(int delta) {
-        state.scores[CurrentPlayerColor] += delta;
-        UpdateScore();
+        if (node.GetColor() != PlayerColor) { return; }
+        if (TryToPay(2 << node.GetGrade())) node.SetGrade(node.GetGrade() + 1);
+        Holder.GameDrawerObject.UpdateNode(node);
+
+        state.graph.nodes[node_num] = node;
     }
-    bool TryToPay(int cost) {
-        if (state.scores[CurrentPlayerColor] >= cost) {
+    public void Start()
+    {
+        // Holder.OnClick += OnPointerDown;
+        state.InitGameState(NumberOfColours);
+
+        // tmp_filling
+        for (int i = 0; i < 10; ++i) state.graph.nodes.Add(new Node());
+        state.graph.nodes[0].SetNodeState(new Vector2(200, 750), 0, 0, 0, Node.NodeType.Miner);
+        state.graph.nodes[1].SetNodeState(new Vector2(511, 742), 0, 1, 0, Node.NodeType.Miner);
+        state.graph.nodes[2].SetNodeState(new Vector2(1720, 120), 0, 2, 0, Node.NodeType.Miner);
+        state.graph.nodes[3].SetNodeState(new Vector2(1430, 910), 0, 3, 0, Node.NodeType.Miner);
+        state.graph.nodes[4].SetNodeState(new Vector2(1042, 671), 0, 4, 0, Node.NodeType.Miner);
+
+        state.graph.nodes[5].SetNodeState(new Vector2(700, 940), 1, 5, 0, Node.NodeType.Miner);
+        state.graph.nodes[6].SetNodeState(new Vector2(980, 200), 2, 6, 0, Node.NodeType.Miner);
+        state.graph.nodes[7].SetNodeState(new Vector2(1700, 510), 3, 7, 0, Node.NodeType.Miner);
+
+        state.graph.nodes[8].SetNodeState(new Vector2(432, 110), 0, 8, 0, Node.NodeType.Miner);
+        state.graph.nodes[9].SetNodeState(new Vector2(524, 571), 0, 9, 0, Node.NodeType.Miner);
+
+
+
+        state.graph.AddEdge(1, 5);
+        state.graph.AddEdge(0, 1);
+        state.graph.AddEdge(1, 9);
+        state.graph.AddEdge(8, 9);
+        state.graph.AddEdge(6, 9);
+        state.graph.AddEdge(2, 4);
+        state.graph.AddEdge(4, 6);
+        state.graph.AddEdge(3, 4);
+        state.graph.AddEdge(2, 7);
+        // tmp_filling
+
+       Holder.GameDrawerObject.DrawGame();
+       ChangePlayerColor();
+    }
+    void CheckGameEnd() {
+        foreach (var node in state.graph.nodes) {
+            if (node.GetColor() == PlayerColor) {
+                state.running_state[PlayerColor] = true;
+                Holder.GameDrawerObject.UpdateEndGame();  // ?
+                return;
+            }
+        }
+        state.running_state[PlayerColor] = false;
+
+        Holder.GameDrawerObject.UpdateEndGame();
+    }
+    void CountGold()
+    {
+        foreach(Node node in state.graph.nodes)
+        state.scores[node.GetColor()] += node.GetValue() * (node.GetGrade() + 1);
+
+        Holder.GameDrawerObject.UpdateScore();
+    }
+    private float GoldTimer = 0;
+    private float CheckEndGameTimer = 0;
+    public void Update()
+    {
+        // if (Input.GetKeyDown(KeyCode.Tab)) { Application.Quit(); }
+        // if (!state.is_game_running) { return; }
+        GoldTimer += Time.deltaTime;
+        CheckEndGameTimer += Time.deltaTime;
+        if (GoldTimer >= 1) {
+            GoldTimer -= 1;
+            CountGold();
+        }
+        if (CheckEndGameTimer >= 1) {
+            CheckEndGameTimer -= 1;
+            CheckGameEnd();
+        }
+    }
+    bool TryToPay(int cost)
+    {
+        if (state.scores[PlayerColor] >= cost)
+        {
             ChangeCurrentScore(-cost);
             return true;
         }
         return false;
     }
-    void UpdateScore() {
-        ScoreTable.GetComponentInChildren<TextMeshProUGUI>().text =
-        "Score: " + state.scores[CurrentPlayerColor].ToString();
+    void ChangeCurrentScore(int delta)
+    {
+        state.scores[PlayerColor] += delta;
+        Holder.GameDrawerObject.UpdateScore();
     }
-    void UpdateClickPower() {
-        ButtonIncreasePower.GetComponentInChildren<TextMeshProUGUI>().text =
-        "Click power: " + state.click_powers[CurrentPlayerColor].ToString();
+    public void ChangePlayerColor() {
+        PlayerColor += 1; PlayerColor %= NumberOfColours;
+        CheckGameEnd();
+        Holder.GameDrawerObject.UpdateAllStats();
     }
-    void CountGold() {
-        foreach(Node node in state.nodes) {
-            state.scores[node.color] += node.score * (node.grade + 1);
-        }
-        UpdateScore();
-    }
-    public void Update() {
-        if (Input.GetKeyDown(KeyCode.Tab)) { Application.Quit(); }
-        if (!state.is_game_running) { return; }
-        GoldTimer += Time.deltaTime;
-        if (GoldTimer >= 1) {
-            GoldTimer = 0;
-            CountGold();
+    public void IncreasePowerClick() {
+        if (TryToPay(1 << state.click_powers[PlayerColor])) {
+            ++state.click_powers[PlayerColor];
+            Holder.GameDrawerObject.UpdatePowerClick();
         }
     }
-    public void DrawDesk() {
-        state.DrawDesk();
-    }
+
 }
-
-
-
-
-
-
-
