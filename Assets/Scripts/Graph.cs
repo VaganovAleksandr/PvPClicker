@@ -8,7 +8,7 @@ using UnityEngine;
 public class Graph {
     // Container for all nodes in graph
     public List<Node> nodes;
-    // Adjacency matrix for all nodes in container nodes
+    // Container for all edges in graph
     public List<Edge> edges;
     
     // Private function for generating nodes in this.nodes
@@ -28,7 +28,7 @@ public class Graph {
     private void MakeEdges() {
         IPoint[] points = new IPoint[Size()];
 
-        for (int i = 0; i < this.Size(); ++i) {
+        for (int i = 0; i < Size(); ++i) {
             points[i].X = nodes[i].coords.x;
             points[i].Y = nodes[i].coords.y;
         }
@@ -45,7 +45,7 @@ public class Graph {
     }
 
     // Function to generate graph
-    void Generate(Vector2 bounds, int num_nodes=0, float gold_freq=0.1f) {
+    public void Generate(Vector2 bounds, int num_nodes=0, float gold_freq=0.1f) {
         /*
             bounds: Bounds of coordinates to generate points, must be two integers
             num_nodes: Number of nodes in generated graph
@@ -55,7 +55,18 @@ public class Graph {
         MakeEdges();
     }
 
-    int Size() {
-        return this.nodes.Count();
+    // Returns amount of nodes
+    public int Size() {
+        return nodes.Count();
     }
+
+    // Returns nodes of graph
+    public List<Node> GetNodes() {
+        return nodes;
+    }
+
+    // Returns edges of graph
+    public List<Edge> GetEdges() {
+        return edges;
+    } 
 }
