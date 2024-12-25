@@ -3,6 +3,7 @@ using UnityEngine;
 
 class Randomizer
 {
+    // Generate random unique int numbers on range(min, max) in amount of count (erorr if count exceeds length of range)
     public static int[] GetUniqueRandomIntArray(int min, int max, int count) {
         int[] result = new int[count];
         List<int> numbersInOrder = new();
@@ -18,18 +19,22 @@ class Randomizer
         return result;
     }
 
-    public static List<float> GetUniqueRandomFloatArray(float min, float max, int count) {
-        float start = UnityEngine.Random.Range(min, min + (max - min) / (10 * count));
-        var additives = GetUniqueRandomIntArray(0, 10 * count, count);
+    // Generate pseudorandom unique float numbers on range(min, max) in amount of count (pseudorandom means
+    // that numbers are not truly random, they're distributed discretly with step 1 / (step_coeff * count). step_coeff can
+    // be adjusted to generate point more closer)
+    public static List<float> GetUniqueRandomFloatArray(float min, float max, int count, int step_coeff=10) {
+        float start = UnityEngine.Random.Range(min, min + (max - min) / (step_coeff * count));
+        var additives = GetUniqueRandomIntArray(0, step_coeff * count, count);
         List<float> result = new();
 
         foreach (var add in additives) {
-            result.Add(start + add);
+            result.Add(start + add / (step_coeff * count));
         }
 
         return result;
     }
 
+    // Generate pseudorandom Vector2s, bounded by (0, bounds.x) and (0, bounds.y) rectangle
     public static List<Vector2> GetUniqueRandomVector2Array(Vector2 bounds, int count) {
         var xs = GetUniqueRandomFloatArray(0f, bounds.x, count);
         var ys = GetUniqueRandomFloatArray(0f, bounds.y, count);
