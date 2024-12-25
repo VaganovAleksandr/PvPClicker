@@ -23,43 +23,48 @@ public class Node {
     public NodeState state = NodeState.Free;
     public NodeType type = NodeType.Mana;
 
+    public Node(float x, float y) {
+        coords.x = x;
+        coords.y = y;
+    }
+
     // Increase value of node manually
-    void IncreaseValue(int value) {
+    public void IncreaseValue(int value) {
         this.value += value;
     }
 
     // Set state of node manually
-    void SetState(NodeState state) {
+    public void SetState(NodeState state) {
         this.state = state;
     }
 
     // Get occupancy (donbass) state of node
-    NodeState GetState() {
+    public NodeState GetState() {
         return this.state;
     }
 
     // Set type of node manually
-    void SetNodeType(NodeType type) {
+    public void SetNodeType(NodeType type) {
         this.type = type;
     }
 
     // Get resource type of node
-    NodeType GetNodeType() {
+    public NodeType GetNodeType() {
         return this.type;
     }
 
     // Set coordinates of node manually
-    void SetCoords(Vector2 coords) {
+    public void SetCoords(Vector2 coords) {
         this.coords = coords;
     }
 
     // Get coords of node
-    Vector2 GetCoords() {
+    public Vector2 GetCoords() {
         return this.coords;
     }
 
     // Get current power of node
-    int Produce() {
+    public int Produce() {
         return value;
     }
 }

@@ -18,7 +18,7 @@ class Randomizer
         return result;
     }
 
-    public List<float> GetUniqueRandomFloatArray(float min, float max, int count) {
+    public static List<float> GetUniqueRandomFloatArray(float min, float max, int count) {
         float start = UnityEngine.Random.Range(min, min + (max - min) / (10 * count));
         var additives = GetUniqueRandomIntArray(0, 10 * count, count);
         List<float> result = new();
@@ -30,7 +30,7 @@ class Randomizer
         return result;
     }
 
-    public List<Vector2> GetUniqueRandomVector2Array(Vector2 bounds, int count) {
+    public static List<Vector2> GetUniqueRandomVector2Array(Vector2 bounds, int count) {
         var xs = GetUniqueRandomFloatArray(0f, bounds.x, count);
         var ys = GetUniqueRandomFloatArray(0f, bounds.y, count);
 
